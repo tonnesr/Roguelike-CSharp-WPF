@@ -1,2 +1,9 @@
 # Roguelike-CSharp-WPF
-Project to create a roguelike using .net wpf.
+Creating a roguelike game using WPF (.NET framework).
+
+
+**Screenshot:**
+
+![screenshot](https://i.imgur.com/uLI4Tdm.png)
+
+The screenshot shows testing of tiles and colors.
