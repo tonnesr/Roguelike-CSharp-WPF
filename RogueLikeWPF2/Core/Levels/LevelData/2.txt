@@ -1,0 +1,12 @@
+id
+3
+name
+The Forest
+size
+12 1
+tiles
+1 1 1 1 1 1 1 1 1 1 1 1
+colors
+1 1 1 1 1 1 1 1 1 1 1 1
+functions
+0 0 0 0 0 0 1 1 0 0 0 0
