@@ -21,6 +21,7 @@ using System.Diagnostics;
 
 using RogueLikeWPF2.Core.Levels;
 using RogueLikeWPF2.Core.Tiles;
+using RogueLikeWPF2.Core.Entities.Player;
 
 // Duplicate refrences
 using _Brushes = System.Windows.Media.Brushes;
@@ -67,6 +68,13 @@ namespace RogueLikeWPF2
         public static Grid mainGrid;
         public static Grid gameGrid;
 
+
+        // Game
+        private static int gameStatus = 1; // 0 - Start Menu, 1 - Game, 2 - Pause?
+        // Testing/
+        private Player playerOne;
+        private static Bitmap playerOneSymbol;
+
         /// <summary>
         /// Constructor for MainWindow
         /// </summary>
@@ -81,10 +89,16 @@ namespace RogueLikeWPF2
 
             LevelInitializer.LoadLevels();
 
-            _tiles = CreateTilesFromTileset( new Bitmap( _tilesetURI) );
+            _tiles = CreateTilesFromTileset( new Bitmap( _tilesetURI) ); // TODO: Way to rotate images, so that we don't need the same symbol/tile four times rotated.
             _colors = CreateColorFromColorTileSet( new Bitmap( _colorsetURI) );
 
             InitializeGameWindow();
+
+
+            // TESTING // DEBUGGING // REMOVE
+            playerOneSymbol = new Bitmap("./Core/Entities/Player/player_16x16_16x16.png"); // REMOVE
+            playerOne = new Player(1, 1, "Tonnes", "Knight", 1, 0); // REMOVE
+            //MainGameLoop(); // REMOVE
         }
 
         /// <summary>
@@ -170,6 +184,46 @@ namespace RogueLikeWPF2
             }
         }
 
+        private void MainGameLoop()
+        {
+            //StackPanel playerPanel = new StackPanel() {
+            //    Name = "PlayerOne",    
+            //};
+
+            do // WE DO NOT NEED A LOOP. THE PROGRAM IS ALREADY IN A LOOP. (WPF).
+            {
+                Debug.WriteLine(playerOne.X + ", " + playerOne.Y);
+            } while (gameStatus == 1);
+        }
+
+        #region Button Press
+        /// <summary>
+        /// Keyboard button event handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e">Key Press Down Event</param>
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+
+            // REMOVE // TESTING // DEBUGGING
+            switch(e.Key)
+            {
+                case Key.W:
+                    playerOne.Y--;
+                    break;
+                case Key.A:
+                    playerOne.X--;
+                    break;
+                case Key.S:
+                    playerOne.Y++;
+                    break;
+                case Key.D:
+                    playerOne.X++;
+                    break;
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Renders a tile based on a Tile class's information.
         /// </summary>
@@ -189,20 +243,6 @@ namespace RogueLikeWPF2
 
             gameGrid.Children.Add(tile);
         }
-
-        #region Button Press
-        /// <summary>
-        /// Keyboard button event handler
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e">Key Press Down Event</param>
-        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            Key key = e.Key;
-
-            this.Title = key.ToString();
-        }
-        #endregion
 
         #region Creation of tile map and color-pallet map.
         /// <summary>
@@ -239,7 +279,7 @@ namespace RogueLikeWPF2
         }
 
         /// <summary>
-        /// 
+        /// Creates an list of colors, based on a pallet image.
         /// </summary>
         /// <returns></returns>
         private List<_Color> CreateColorFromColorTileSet(Bitmap colorset)
@@ -278,9 +318,7 @@ namespace RogueLikeWPF2
         private ImageBrush GetTileSetTile(int tileSymbol, List<Bitmap> tiles, int tileColor, List<_Color> colors)
         {
             Bitmap tile;
-            _Color newColor = colors[tileColor];
-            _Color oldColor = _Color.FromArgb(255, 255, 255, 255); // TODO: Make automatic, so that there can be more than one color for tiles. // IDEA: use alpha instead of rgb. 
-            // FIX --> Does not currently work with the # tile, since it's more than one color.
+            _Color newColor;
 
             // Getting a symbol for the tile
             if (tileSymbol <= tiles.Count())
@@ -292,17 +330,16 @@ namespace RogueLikeWPF2
                 throw new Exception("Tile symbol index does not exist. Symbol index outside of range?");
             }
 
-            // LOOK HERE WHEN LOOKING FOR SOLUTION: The color of a individual symbol is the same as the other identical symbols. So a G will always be Red (if that was the first color it was assigned to?).
-
             // Coloring of tiles
-            if (tileColor != 1 && tileSymbol != 7) // Second color equals the whole x or y spectrum except for the four corners. // Different symbols have different colors? 
+            if (tileColor != 1 || tileSymbol != 7) // Second color equals the whole x or y spectrum except for the four corners. // Different symbols have different colors? 
             {
                 for (int i = 0; i < tile.Height; i++)
                 {
                     for (int j = 0; j < tile.Width; j++)
                     {
-                        if (tile.GetPixel(i, j) == oldColor)
+                        if (tile.GetPixel(i, j).A > 0) // TODO: Make less resources intensive by not doing the same symbol more than once. // TODO2: And maybe use pointers instead of Get/Set Pixels, it's slow.
                         {
+                            newColor = _Color.FromArgb(tile.GetPixel(i, j).A, colors[tileColor].R, colors[tileColor].G, colors[tileColor].B);
                             tile.SetPixel(i, j, newColor);
                         }
                     }
@@ -312,7 +349,7 @@ namespace RogueLikeWPF2
             // Creating a imagebrush for use in the background of stackpanels.
             ImageBrush brush = new ImageBrush()
             {
-                ImageSource = ConvertBitmapToBitmapSource(tile) // Needs to be converted to bitmapsource
+                ImageSource = ConvertBitmapToBitmapSource(tile) // Converts to bitmapsource
             };
 
             return brush;
@@ -321,9 +358,19 @@ namespace RogueLikeWPF2
 
         #region Helper methods
 
-        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        public static extern bool DeleteObject(IntPtr hObject);
+        /// <summary>
+        /// Used to delete Interpolated "integers".
+        /// </summary>
+        /// <param name="hObject"></param>
+        /// <returns></returns>
+        [DllImport("gdi32.dll")]
+        private static extern bool DeleteObject(IntPtr hObject);
 
+        /// <summary>
+        /// Converts Bitmap to BitmapSource
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
         private BitmapSource ConvertBitmapToBitmapSource(Bitmap image)
         {
             IntPtr hBitmap = image.GetHbitmap();
@@ -340,7 +387,7 @@ namespace RogueLikeWPF2
             }
             catch (Exception e)
             {
-                throw e;
+                throw e; // TODO: Implement better error handling.
             }
             finally
             {

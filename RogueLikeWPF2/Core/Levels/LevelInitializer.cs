@@ -58,7 +58,7 @@ namespace RogueLikeWPF2.Core.Levels
                     ID = int.Parse(currentLevelString[1]),
                     Name = currentLevelString[3],
                     Height = int.Parse(tempStorage[1]),
-                    Width = int.Parse(tempStorage[0]),                   
+                    Width = int.Parse(tempStorage[0]),
                 };
                 currentLevel.Tiles = new Tile[currentLevel.Height, currentLevel.Width];
 
