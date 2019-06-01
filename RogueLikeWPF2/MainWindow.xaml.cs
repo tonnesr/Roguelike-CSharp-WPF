@@ -37,12 +37,12 @@ namespace RogueLikeWPF2
     public partial class MainWindow : Window
     {
         // Game Sizes
-        public static readonly int gameWidth = 32;
-        public static readonly int gameHeight = 32;
-        public static readonly int tileWidth = 16;
-        public static readonly int tileHeight = 16;
-        public static readonly int windowWidth = gameWidth * tileWidth;
-        public static readonly int windowHeight = gameWidth * tileHeight;
+        public static readonly int gameWidth = 32; // FIX: game not supporting levels over 32x32.
+        public static readonly int gameHeight = 32; // FIX: game not supporting levels over 32x32.
+        public static readonly int tileWidth = 16; // TODO: Make automatic? 
+        public static readonly int tileHeight = 16; // TODO: Make automatic? 
+        public static readonly int windowWidth = (gameWidth * tileWidth) + (gameWidth / 2);
+        public static readonly int windowHeight = (gameWidth * tileHeight) + (gameHeight + 47); // TODO: Make more acurate, and automiatic.
 
         //public static readonly int sumTileWidth = tileset.Width / _tilesetTileWidth;
         //public static readonly int sumTileHeight = sumTileWidth;
@@ -54,7 +54,7 @@ namespace RogueLikeWPF2
 
         // TILESET AND COLORSET
         // Tileset
-        private static readonly string _tilesetURI = "./Core/Tiles/tileset_16x16_128.png";
+        private static readonly string _tilesetURI = "./Core/Tiles/tileset_16x16_128.png"; // IDEA: Add animated tiles. Example: water, fire.
         private static readonly int _tilesetTileWidth = 16;
         private static readonly int _tilesetTileHeight = 16;
         private static List<Bitmap> _tiles;
@@ -64,16 +64,27 @@ namespace RogueLikeWPF2
         private static readonly int _colorsetTileHeight = 1;
         private static List<_Color> _colors;
 
+        // COMPONENTS
         // Grids
-        public static Grid mainGrid;
-        public static Grid gameGrid;
+        private static Grid mainGrid;
+        private static Grid gameGrid;
+        // Rows
+        private static RowDefinition mainRow;
+        private static RowDefinition mainGameRow;
+        // Panels
+        public static StackPanel statusPanel;
+        // Grid Definisions
+        private static RowDefinition rowIndDef;
+        private static ColumnDefinition colIndDef;
 
 
         // Game
-        private static int gameStatus = 1; // 0 - Start Menu, 1 - Game, 2 - Pause?
-        // Testing/
-        private Player playerOne;
-        private static Bitmap playerOneSymbol;
+        //private static int gameStatus = 1; // 0 - Start Menu, 1 - Game, 2 - Pause? // NOT USED
+
+        // Testing // REMOVE
+        private static Player playerOne;
+        private static StackPanel testPlayerPanel;
+        private static int LevelSelector = 0; // TODO: Implement level selection
 
         /// <summary>
         /// Constructor for MainWindow
@@ -85,20 +96,14 @@ namespace RogueLikeWPF2
             this.Title = "Roguelike";
             this.Width = windowWidth;
             this.Height = windowHeight;
-            this.PreviewKeyDown += Window_PreviewKeyDown;
+            this.PreviewKeyDown += Window_PreviewKeyDown; // Key presses method
 
-            LevelInitializer.LoadLevels();
+            LevelInitializer.LoadLevels(); // Loads levels from files.
 
             _tiles = CreateTilesFromTileset( new Bitmap( _tilesetURI) ); // TODO: Way to rotate images, so that we don't need the same symbol/tile four times rotated.
             _colors = CreateColorFromColorTileSet( new Bitmap( _colorsetURI) );
 
             InitializeGameWindow();
-
-
-            // TESTING // DEBUGGING // REMOVE
-            playerOneSymbol = new Bitmap("./Core/Entities/Player/player_16x16_16x16.png"); // REMOVE
-            playerOne = new Player(1, 1, "Tonnes", "Knight", 1, 0); // REMOVE
-            //MainGameLoop(); // REMOVE
         }
 
         /// <summary>
@@ -112,88 +117,87 @@ namespace RogueLikeWPF2
                 Background = _Brushes.Black
             };
             // Main grid definition rows and cols
-            RowDefinition mainRow = new RowDefinition // Status bar space
+            mainRow = new RowDefinition // Status bar space
             {
                 Name = "MainRow",
-                Height = new GridLength( _statusbarHeight )
+                Height = new GridLength(_statusbarHeight)
             };
-            RowDefinition mainGameRow = new RowDefinition
+            mainGameRow = new RowDefinition
             {
                 Name = "MainGameRow",
-                Height = new GridLength( 1, GridUnitType.Star ) // 1 for percentage of * (or something), but 1 is 100%.
+                Height = new GridLength(1, GridUnitType.Star) // 1 for percentage of * (or something), but 1 is 100%.
             };
-            mainGrid.RowDefinitions.Add( mainRow );
-            mainGrid.RowDefinitions.Add( mainGameRow );
+            mainGrid.RowDefinitions.Add(mainRow);
+            mainGrid.RowDefinitions.Add(mainGameRow);
             this.AddChild(mainGrid);
 
             // Status bar (top space)
-            StackPanel statusPanel = new StackPanel
+            statusPanel = new StackPanel
             {
                 Name = "StatusPanel",
                 Background = _Brushes.Black
             };
-            statusPanel.SetValue( Grid.RowProperty, _statusbarGridPosition );
-            mainGrid.Children.Add( statusPanel );
+            statusPanel.SetValue(Grid.RowProperty, _statusbarGridPosition);
+            mainGrid.Children.Add(statusPanel);
 
             // Game screen / grid / grid inside mainGrid
             gameGrid = new Grid
             {
                 Name = "GameGrid"
             };
-            gameGrid.SetValue( Grid.RowProperty, _gameGridPosition );
-            mainGrid.Children.Add( gameGrid );
+            gameGrid.SetValue(Grid.RowProperty, _gameGridPosition);
+            mainGrid.Children.Add(gameGrid);
 
-
-            // Second grid (game grid) content
-            RowDefinition rowIndDef;
-            ColumnDefinition colIndDef;
 
             // Generate content of game grid
             // Generate rows for the game grid.
+            // Rows
             for (int i = 0; i < gameHeight; i++)
             {
-                // Rows
+
                 rowIndDef = new RowDefinition
                 {
                     Name = "row" + i,
-                    Height = new GridLength(tileHeight, GridUnitType.Star) // Grid type thing .Star (might cause problems) //GridUnitType.Star
+                    Height = new GridLength(tileHeight)
                 };
                 gameGrid.RowDefinitions.Add(rowIndDef);
             }
+            // Cols
             for (int i = 0; i < gameWidth; i++)
             {
-                // Cols
                 colIndDef = new ColumnDefinition
                 {
                     Name = "colum" + i,
-                    Width = new GridLength(tileWidth, GridUnitType.Star) // Grid type thing .Star (might cause problems) //GridUnitType.Star
+                    Width = new GridLength(tileWidth)
                 };
                 gameGrid.ColumnDefinitions.Add(colIndDef);
             }
 
+            // TESTING // REMOVE // DEBUGGING
 
-            // RENDERING TEST / DEBUGGING / REMOVE
-            int levelTestSelector = 0; // TODO: Add level progression.
-            for (int i = 0; i < LevelInitializer.levelsArray[levelTestSelector].Height; i++)
+            // Width does not work after 32, everything beyond 32 will be put in the same place.
+            //this.Width = (LevelInitializer.levelsArray[levelTestSelector].Width * tileWidth) + (gameWidth / 2); // FIX: Maths
+            //this.Height = (LevelInitializer.levelsArray[levelTestSelector].Height * tileHeight) + (gameHeight + 47); // FIX: Maths.   47 - size of status panel?
+
+            for (int i = 0; i < LevelInitializer.levelsArray[LevelSelector].Height; i++)
             {
-                for (int j = 0; j < LevelInitializer.levelsArray[levelTestSelector].Width; j++)
+                for (int j = 0; j < LevelInitializer.levelsArray[LevelSelector].Width; j++)
                 {
-                    RenderTile(LevelInitializer.levelsArray[levelTestSelector].Tiles[i, j]);
+                    RenderTile(LevelInitializer.levelsArray[LevelSelector].Tiles[i, j], "tile");
                     //Debug.WriteLine("Tile: " + LevelInitializer.levelsArray[levelTestSelector].Tiles[i, j].tileSymbol + ", Color: " + LevelInitializer.levelsArray[levelTestSelector].Tiles[i, j].tileColor + ", Func: " + LevelInitializer.levelsArray[levelTestSelector].Tiles[i, j].tileFunction);
                 }
             }
-        }
 
-        private void MainGameLoop()
-        {
-            //StackPanel playerPanel = new StackPanel() {
-            //    Name = "PlayerOne",    
-            //};
-
-            do // WE DO NOT NEED A LOOP. THE PROGRAM IS ALREADY IN A LOOP. (WPF).
-            {
-                Debug.WriteLine(playerOne.X + ", " + playerOne.Y);
-            } while (gameStatus == 1);
+            // TODO: Automatic Player Creation, based on level map and integer of max number of players.
+            //PLAYER TESTING
+            playerOne = new Player("Tonnes", "Knight", 0, 1, 1, 59, 21);
+            testPlayerPanel = new StackPanel() {
+                Name = "PlayerOne",
+                Background = GetTileSetTile(playerOne.tile.tileSymbol, _tiles, playerOne.tile.tileColor, _colors)
+            };
+            Grid.SetRow(testPlayerPanel, playerOne.tile.Y);
+            Grid.SetColumn(testPlayerPanel, playerOne.tile.X);
+            gameGrid.Children.Add(testPlayerPanel);
         }
 
         #region Button Press
@@ -204,23 +208,62 @@ namespace RogueLikeWPF2
         /// <param name="e">Key Press Down Event</param>
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            Tile nextTile;
 
-            // REMOVE // TESTING // DEBUGGING
-            switch(e.Key)
+            switch (e.Key)
             {
+                case Key.Up: // TODO: Change when implementing more than one player. Add controls for individual players.
                 case Key.W:
-                    playerOne.Y--;
+                    if (playerOne.tile.Y > 0)
+                    {
+                        nextTile = LevelInitializer.levelsArray[LevelSelector].Tiles[playerOne.tile.Y - 1, playerOne.tile.X];
+                        if (nextTile.isWalkable)
+                        {
+                            playerOne.tile.Y--;
+                        }
+                        //Debug.WriteLine("symbol: " + nextTile.tileSymbol + ", x: " + nextTile.X + ", y:" + nextTile.Y + ", walk: " + nextTile.isWalkable + ", color: " + nextTile.tileColor + ", type: " + nextTile.tileType);
+                    }
                     break;
+                case Key.Left:
                 case Key.A:
-                    playerOne.X--;
+                    if (playerOne.tile.X > 0)
+                    {
+                        nextTile = LevelInitializer.levelsArray[LevelSelector].Tiles[playerOne.tile.Y, playerOne.tile.X - 1];
+                        if (nextTile.isWalkable)
+                        {
+                            playerOne.tile.X--;
+                        }
+                        //Debug.WriteLine("symbol: " + nextTile.tileSymbol + ", x: " + nextTile.X + ", y:" + nextTile.Y + ", walk: " + nextTile.isWalkable + ", color: " + nextTile.tileColor + ", type: " + nextTile.tileType);
+                    }
                     break;
+                case Key.Down:
                 case Key.S:
-                    playerOne.Y++;
+                    if (playerOne.tile.Y < gameWidth - 1)
+                    {
+                        nextTile = LevelInitializer.levelsArray[LevelSelector].Tiles[playerOne.tile.Y + 1, playerOne.tile.X];
+                        if (nextTile.isWalkable)
+                        {
+                            playerOne.tile.Y++;
+                        }
+                        //Debug.WriteLine("symbol: " + nextTile.tileSymbol + ", x: " + nextTile.X + ", y:" + nextTile.Y + ", walk: " + nextTile.isWalkable + ", color: " + nextTile.tileColor + ", type: " + nextTile.tileType);
+                    }
                     break;
+                case Key.Right:
                 case Key.D:
-                    playerOne.X++;
+                    if (playerOne.tile.X < gameWidth - 1)
+                    {
+                        nextTile = LevelInitializer.levelsArray[LevelSelector].Tiles[playerOne.tile.Y, playerOne.tile.X + 1];
+                        if (nextTile.isWalkable)
+                        {
+                            playerOne.tile.X++;
+                        }
+                        //Debug.WriteLine("symbol: " + nextTile.tileSymbol + ", x: " + nextTile.X + ", y:" + nextTile.Y + ", walk: " + nextTile.isWalkable + ", color: " + nextTile.tileColor + ", type: " + nextTile.tileType);
+                    }
                     break;
             }
+            MoveTile(testPlayerPanel, playerOne.tile.X, playerOne.tile.Y);
+
+            //Debug.WriteLine("x: " + player.tile.X + ", y: " + player.tile.Y);
         }
         #endregion
 
@@ -228,9 +271,9 @@ namespace RogueLikeWPF2
         /// Renders a tile based on a Tile class's information.
         /// </summary>
         /// <param name="tileInformation"></param>
-        private void RenderTile(Tile tileInformation)
+        private void RenderTile(Tile tileInformation, string type)
         {
-            string name = "Tile" + tileInformation.X + tileInformation.Y;            
+            string name = type + "x" + tileInformation.X + "y" + tileInformation.Y;            
 
             StackPanel tile = new StackPanel
             {
@@ -242,6 +285,16 @@ namespace RogueLikeWPF2
             Grid.SetColumn(tile, tileInformation.X); // Changed --
 
             gameGrid.Children.Add(tile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tileToMove"></param>
+        private void MoveTile(StackPanel tileToMove, int toX, int toY)
+        {
+            Grid.SetRow(tileToMove, toY);
+            Grid.SetColumn(tileToMove, toX);
         }
 
         #region Creation of tile map and color-pallet map.

@@ -2,9 +2,15 @@
 using System.IO;
 using System.Linq;
 
+using System.Windows;
+using System.Windows.Controls;
 using System.Diagnostics;
 
 using RogueLikeWPF2.Core.Tiles;
+
+// IDEAS:
+// IDEA: Make variants of tiles automaticaly, so that we don't need a new tile for every changed pixel.
+// IDEA: Multi coloured tiles. Example: use two base colour or more to change out? i.e. white, gray.
 
 namespace RogueLikeWPF2.Core.Levels
 {
@@ -14,16 +20,6 @@ namespace RogueLikeWPF2.Core.Levels
     public static class LevelInitializer
     {
         public static Level[] levelsArray;
-
-        /// <summary>
-        /// Get a level based on an integer identification.
-        /// </summary>
-        /// <param name="levelNumber"></param>
-        /// <returns></returns>
-        public static Level GetLevel(int levelNumber)
-        {           
-            return levelsArray[levelNumber];
-        }
 
         /// <summary>
         /// 
@@ -37,6 +33,7 @@ namespace RogueLikeWPF2.Core.Levels
             Level currentLevel; // Current level information input object.
             StreamReader fileReader; // Get content of file.
             string[] tempStorage;
+            bool isWalkable;
 
             // Goes through every file of the levelsPath(path<string>) directory.
             foreach (string filePath in levelPaths)
@@ -64,7 +61,7 @@ namespace RogueLikeWPF2.Core.Levels
 
                 currentLevelString = currentLevelString.Skip(6).ToArray(); // remove used elements from array.
 
-
+                
                 for (int i = 0; i < currentLevelString.Length; i++)
                 {
                     switch (currentLevelString[i])
@@ -136,6 +133,56 @@ namespace RogueLikeWPF2.Core.Levels
                                 }
                                 i++;
                             }
+                            i--;
+                            break;
+                        case "walkable":
+                            i++;
+                            for (int j = 0; j < currentLevel.Height; j++)
+                            {
+                                try
+                                {
+                                    tempStorage = currentLevelString[i].Split(' ');
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    throw new Exception("LevelID: " + currentLevel.ID + ", LevelName: " + currentLevel.Name + ", is most likely not the correct size in relation to tiles, colors, functions, etc.");
+                                }
+
+                                for (int k = 0; k < currentLevel.Width; k++)
+                                {
+                                    if (int.Parse(tempStorage[k]) == 1)
+                                    {
+                                        isWalkable = true;
+                                    }
+                                    else {
+                                        isWalkable = false;
+                                    }
+                                    currentLevel.Tiles[j, k].isWalkable = isWalkable;
+                                }
+                                i++;
+                            }
+                            i--;
+                            break;
+                        case "entities":
+                            i++;
+                            for (int j = 0; j < currentLevel.Height; j++)
+                            {
+                                try
+                                {
+                                    tempStorage = currentLevelString[i].Split(' ');
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    throw new Exception("LevelID: " + currentLevel.ID + ", LevelName: " + currentLevel.Name + ", is most likely not the correct size in relation to tiles, colors, and/or functions.");
+                                }
+
+                                for (int k = 0; k < currentLevel.Width; k++)
+                                {
+                                    currentLevel.Tiles[j, k].tileType = int.Parse(tempStorage[k]);
+                                }
+                                i++;
+                            }
+                            i--;
                             break;
                         default:
                             break;

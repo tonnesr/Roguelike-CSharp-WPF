@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using RogueLikeWPF2.Core.Tiles;
+
 namespace RogueLikeWPF2.Core.Entities.Player
 {
     /// <summary>
@@ -13,8 +15,8 @@ namespace RogueLikeWPF2.Core.Entities.Player
     {
         // If I implement multiplayer
         // Change control scheme if there are more than one player.
-        public int playerID; // id of current player object (this).
-        public int playerIcon; // icon of this player.
+        public int id; // id of current player object (this).
+        public Tile tile;
 
         // Player properties
         public string @class = "no_class"; // class of player.
@@ -27,9 +29,6 @@ namespace RogueLikeWPF2.Core.Entities.Player
         public int level = 1; // level of player
         public string name = "no_name"; // name of player
 
-        public int X; // X pos of player
-        public int Y; // Y pos of player
-
         // Not implemented yet:
         //public Item[] inventory;
 
@@ -40,14 +39,27 @@ namespace RogueLikeWPF2.Core.Entities.Player
         /// <param name="X">Spawn point x for player</param>
         /// <param name="Y">Spawn point y for player</param>
         /// <param name="name">Name of the player</param>
-        public Player(int X, int Y, string name, string @class, int playerID, int playerIcon)
+        /// <param name="class"></param>
+        /// <param name="color"></param>
+        /// <param name="function"></param>
+        /// <param name="id"></param>
+        /// <param name="symbol"></param>
+        public Player(string name, string @class, int id, int X, int Y, int symbol, int color = 1, int function = 0, bool isWalkable = false, int type = 0)
         {
-            this.playerID = playerID; // ID for this player.
-            this.playerIcon = playerIcon; // Icon for this player.
+            this.id = id; // ID for this player, usefull if I implement more than one player.
             this.name = name; // Name of this player.
-            this.X = X; // Pos of this player.
-            this.Y = Y; // Pos of this player.
             this.@class = @class;
+
+            // Player Tile
+            this.tile = new Tile() {
+                X = X,
+                Y = Y,
+                tileSymbol = symbol,
+                tileColor = color,
+                tileFunction = function,
+                isWalkable = isWalkable,
+                tileType = type
+            };
         }
         
         /// <summary>
@@ -61,14 +73,6 @@ namespace RogueLikeWPF2.Core.Entities.Player
             this.mana = this.maxMana;
             this.maxMana += 10;
             this.exp = 0;
-        }
-
-        /// <summary>
-        /// Move the player using arrows or wasd.
-        /// </summary>
-        public void Move()
-        {
-
         }
 
         /// <summary>

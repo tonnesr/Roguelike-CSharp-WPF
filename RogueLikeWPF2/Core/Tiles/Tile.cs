@@ -10,5 +10,6 @@ namespace RogueLikeWPF2.Core.Tiles
         public int tileColor { get; set; }
         public int tileFunction { get; set; }
         public bool isWalkable { get; set; }
+        public int tileType { get; set; }
     }
 }
