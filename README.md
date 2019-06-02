@@ -4,9 +4,10 @@ Creating a roguelike game using WPF (.NET framework).
 
 **Screenshots:**
 
-![screenshoy2](https://i.imgur.com/6L5QCIq.png)
+![screenshot3](https://i.imgur.com/N57YGmk.png)
+![screenshot2](https://i.imgur.com/6L5QCIq.png)
 
-Progress on player.
+Progress.
 
 <br></br>
 
