@@ -41,8 +41,10 @@ namespace RogueLikeWPF2
         public static readonly int gameHeight = 32; // FIX: game not supporting levels over 32x32.
         public static readonly int tileWidth = 16; // TODO: Make automatic? 
         public static readonly int tileHeight = 16; // TODO: Make automatic? 
-        public static readonly int windowWidth = (gameWidth * tileWidth) + (gameWidth / 2);
-        public static readonly int windowHeight = (gameWidth * tileHeight) + (gameHeight + 47); // TODO: Make more acurate, and automiatic.
+        //public static readonly int sidebarWidth = 16;
+        //public static readonly int sidebarHeight = 16;
+        public static readonly int windowWidth = ((gameWidth * tileWidth) + (gameWidth / 2)) /*+ sidebarWidth*/;
+        public static readonly int windowHeight = ((gameWidth * tileHeight) + (gameHeight + 47)); // TODO: Make more acurate, and automiatic.
 
         //public static readonly int sumTileWidth = tileset.Width / _tilesetTileWidth;
         //public static readonly int sumTileHeight = sumTileWidth;
@@ -54,7 +56,7 @@ namespace RogueLikeWPF2
 
         // TILESET AND COLORSET
         // Tileset
-        private static readonly string _tilesetURI = "./Core/Tiles/tileset_16x16_128.png"; // IDEA: Add animated tiles. Example: water, fire.
+        private static readonly string _tilesetURI = "./Core/Tiles/tileset_16x16_256.png"; // IDEA: Add animated tiles. Example: water, fire.
         private static readonly int _tilesetTileWidth = 16;
         private static readonly int _tilesetTileHeight = 16;
         private static List<Bitmap> _tiles;
